@@ -1,0 +1,117 @@
+class Node:
+    def __init__(self, left=None, right=None, parent=None, element=None):
+        self.left = left
+        self.right = right
+        self.parent = parent
+        self.element = element
+
+    def get_element(self):
+        return self.element
+
+
+class Bst_Tree:
+    def __init__(self):
+        self.root = None
+
+    def get_root(self):
+        return self.root
+
+    def set_root(self, node: Node):
+        if self.root is None:
+            self.root = node
+
+    def find_element(self, w_element):
+        def _find_element(n, w_element):
+            if n is None:
+                return None
+
+            if n.element == w_element:
+                return n
+
+            elif n.element < w_element:
+                if n.right is not None:
+                    return _find_element(n.right, w_element)
+
+            elif n.element > w_element:
+                if n.left is not None:
+                    return _find_element(n.left, w_element)
+
+            return None
+
+        return _find_element(self.root, w_element)
+
+    def find_min(self):
+        def _find_min(n):
+            r = n
+            while r.left is not None:
+                r = r.left
+            return r
+
+        return _find_min(self.root)
+
+    def successor(self, node: Node):
+        if node.right is not None:
+            temp = node.right
+            while temp.left is not None:
+                temp = temp.left
+            return temp
+
+        else:
+            if node.parent is not None:
+                temp = node.parent
+                while temp.parent is not None and temp != temp.parent.left:
+                    temp = temp.parent
+
+                if temp.parent is None:
+                    return None
+                return temp.parent
+
+        return None
+
+    def delete_min(self):
+        if self.root is None:
+            return None
+
+        min_node = self.find_min()
+        if min_node.parent is not None:
+            min_node.parent.left = None
+
+    def delete_element(self, element):
+        def _delete_node(node, element):
+            if node is None:
+                return node
+
+            if element < node.element:
+                node.left = _delete_node(node.left, element)
+            elif element > node.element:
+                node.right = _delete_node(node.right, element)
+            else:
+                if node.left is None:
+                    temp = node.right
+                    node = None
+                    return temp
+                elif node.right is None:
+                    temp = node.left
+                    node = None
+                    return temp
+
+                temp = self.find_min(node.right)
+                node.element = temp.element
+                node.right = _delete_node(node.right, temp.element)
+
+            return node
+
+        self.root = _delete_node(self.root, element)
+        
+
+if __name__ == "__main__":
+    a = Node(None, None, None, 1)
+
+    t1 = Bst_Tree()
+    print(t1.get_root())
+
+    t1.set_root(a)
+
+    print(t1.get_root().get_element())
+
+    t1.find_min()
