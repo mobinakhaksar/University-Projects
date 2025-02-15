@@ -1,0 +1,156 @@
+# Snake Game
+
+from tkinter import *
+from tkinter import messagebox
+from random import randint
+
+FD_SIZE = 10
+SN_SIZE = 9
+BG_COLOR = '#d5b0e7'
+FD_COLOR = '#ff1414'
+SN_COLOR = '#3c7221'
+SN = 'snake'
+FD = 'food'
+SIZE = {SN: SN_SIZE, FD: FD_SIZE}
+UP = 'Up'
+DOWN = 'Down'
+RIGHT = 'Right'
+LEFT = 'Left'
+DIRECTIONS = {UP: [0, -1], DOWN: [0, 1], RIGHT: [1, 0], LEFT: [-1, 0]}
+AXES = {UP: 'Vertical', DOWN: 'Vertical', RIGHT: 'Horizontal', LEFT: 'Horizontal'}
+REFRESH_TIME = 300
+
+
+class Game(Canvas):
+    def __init__(self, boss=None):
+        super().__init__(boss)
+        self.configure(width=400, height=400, bg=BG_COLOR)
+        self.running = False
+        self.snake = None
+        self.food = None
+        self.direction = None
+        self.current = None
+        self.score = Scores(self)
+
+
+    def start(self):
+        if not self.running:
+            self.snake = Snake(self)
+            self.food = Food(self)
+            self.direction = RIGHT
+            self.current = Movement(self, RIGHT)
+            self.current.begin()
+            self.running = True
+
+    def redirect(self, event):
+        if self.running and event.keysym in AXES.keys() and AXES[event.keysym] != AXES[self.direction]:
+            self.current.flag = False
+            self.direction = event.keysym
+            self.current = Movement(self, event.keysym)
+            self.current.begin()
+
+    def clean(self):
+        super().delete("all")
+        self.running = False
+        messagebox.showerror(title='Snake Game', message='Game Over!')
+        self.quit()
+
+class Scores:
+    def __init__(self, boss=None):
+        self.counter = StringVar(boss, '0')
+
+    def increment(self):
+        score = int(self.counter.get()) + 1
+        self.counter.set(str(score))
+
+    def reset(self):
+        self.counter.set('0')
+
+
+class Shape:
+    def __init__(self, can, a, b, kind):
+        self.can = can
+        self.x, self.y = a, b
+        self.kind = kind
+        if kind == SN:
+            self.ref = Canvas.create_rectangle(self.can, a - SN_SIZE, b - SN_SIZE, a + SN_SIZE, b + SN_SIZE, fill=SN_COLOR, width=2, outline="")
+        elif kind == FD:
+            self.ref = Canvas.create_oval(self.can, a - FD_SIZE, b - FD_SIZE, a + SN_SIZE, b + SN_SIZE, fill=FD_COLOR, width=2, outline="")
+
+    def modify(self, a, b):
+        self.x, self.y = a, b
+        self.can.coords(self.ref, a - SIZE[self.kind], b - SIZE[self.kind], a + SIZE[self.kind], b + SIZE[self.kind])
+
+    def delete(self):
+        self.can.delete(self.ref)
+
+
+class Food(Shape):
+    def __init__(self, can):
+        self.can = can
+        p = int(40/2 - 1)
+        n, m = randint(0, p-10), randint(0, p-10)
+        a, b = 10 * (2 * n + 1), 10 * (2 * m + 1)
+        while [a, b] in [[block.x, block.y] for block in self.can.snake.blocks]:
+            n, m = randint(0, p), randint(0, p)
+            a, b = 10 * (2 * n + 1), 10 * (2 * m + 1)
+        super().__init__(can, a, b, FD)
+
+
+class Block(Shape):
+    def __init__(self, can, a, y):
+        super().__init__(can, a, y, SN)
+
+
+class Snake:
+    def __init__(self, can):
+        self.can = can
+        a = 10
+        self.blocks = [Block(can, a, a), Block(can, a, a + 20)]
+
+    def move(self, path):
+        a = (self.blocks[-1].x + 20 * path[0]) % 400
+        b = (self.blocks[-1].y + 20 * path[1]) % 400
+        if a == self.can.food.x and b == self.can.food.y:
+            self.can.score.increment()
+            self.can.food.delete()
+            self.blocks.append(Block(self.can, a, b))
+            self.can.food = Food(self.can)
+        elif [a, b] in [[block.x, block.y] for block in self.blocks]:
+            self.can.clean()
+        elif a < 0 or a >= 390 or b < 0 or b >= 390:
+            self.can.clean()
+        else:
+            self.blocks[0].modify(a, b)
+            self.blocks = self.blocks[1:] + [self.blocks[0]]
+
+class Movement:
+    def __init__(self, can, direction):
+        self.flag = 10
+        self.can = can
+        self.direction = direction
+
+    def begin(self):
+        if self.flag > 0:
+            self.can.snake.move(DIRECTIONS[self.direction])
+            self.can.after(REFRESH_TIME, self.begin)
+
+    def stop(self):
+        self.flag = 0
+
+
+root = Tk()
+root.title("Snake Game")
+root.resizable(False, False)
+game = Game(root)
+game.grid(row=1)
+root.bind("<Key>", game.redirect)
+buttons = Frame(root, width=40)
+Button(buttons, text='Start', command=game.start, background='white', font=('Consolas', 10), padx=20).grid()
+Button(buttons, text='Quit', command=quit, background='white', font=('Consolas', 10), padx=24).grid()
+buttons.grid(row=2)
+scoreboard = Frame(root)
+Label(scoreboard, text='Game Score:', background='#d5b0e7', font=('Consolas', 10)).grid()
+Label(scoreboard, textvariable=game.score.counter).grid()
+scoreboard.grid(row=0)
+root.mainloop()
