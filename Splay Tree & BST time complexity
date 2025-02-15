@@ -1,0 +1,315 @@
+class Node:
+
+    def __init__(self, key):
+        self.key = key
+        self.left = None
+        self.right = None
+
+    def isleaf(self):
+        return self.right is None and self.left is None
+
+    def display(self):
+        lines, *_ = self._display_aux()
+        for line in lines:
+            print(line)
+
+    def _display_aux(self):
+        if self.right is None and self.left is None:
+            line = "%s" % self.key
+            width = len(line)
+            height = 1
+            middle = width // 2
+            return [line], width, height, middle
+
+        if self.right is None:
+            lines, n, p, x = self.left._display_aux()
+            s = "%s" % self.key
+            u = len(s)
+            first_line = (x + 1) * " " + (n - x - 1) * "_" + s
+            second_line = x * " " + "/" + (n - x - 1 + u) * " "
+            shifted_lines = [line + u * " " for line in lines]
+            return [first_line, second_line] + shifted_lines, n + u, p + 2, n + u // 2
+
+        if self.left is None:
+            lines, n, p, x = self.right._display_aux()
+            s = "%s" % self.key
+            u = len(s)
+            first_line = s + x * "_" + (n - x) * " "
+            second_line = (u + x) * " " + "\\\\" + (n - x - 1) * " "
+            shifted_lines = [u * " " + line for line in lines]
+            return [first_line, second_line] + shifted_lines, n + u, p + 2, u // 2
+
+        left, n, p, x = self.left._display_aux()
+        right, m, q, y = self.right._display_aux()
+        s = "%s" % self.key
+        u = len(s)
+        first_line = (x + 1) * " " + (n - x - 1) * \
+            "_" + s + y * "_" + (m - y) * " "
+        second_line = x * " " + "/" + \
+            (n - x - 1 + u + y) * " " + "\\\\" + (m - y - 1) * " "
+        if p < q:
+            left += [n * " "] * (q - p)
+        elif q < p:
+            right += [m * " "] * (p - q)
+        zipped_lines = zip(left, right)
+        lines = [first_line, second_line] + \
+            [a + u * " " + b for a, b in zipped_lines]
+        return lines, n + m + u, max(p, q) + 2, n + u // 2
+
+    def height(self):
+        if self.left is None and self.right is None:
+            return 1
+        elif self.left is None:
+            return 1 + self.right.height()
+        elif self.right is None:
+            return 1 + self.left.height()
+        else:
+            return 1 + max(self.left.height(), self.right.height())
+
+
+class BST:
+
+    def __init__(self):
+        self.root = None
+        self.height_sum = 0
+
+    def insert(self, key):
+        if self.root is None:
+            self.root = Node(key)
+        else:
+            self._insert(key, self.root)
+
+    def _insert(self, key, node):
+        if key < node.key:
+            if node.left is None:
+                node.left = Node(key)
+            else:
+                self._insert(key, node.left)
+        elif key > node.key:
+            if node.right is None:
+                node.right = Node(key)
+            else:
+                self._insert(key, node.right)
+
+    def delete(self, key):
+        self.root = self._delete(key, self.root)
+
+    def _delete(self, key, node):
+        if node is None:
+            return None
+        if key < node.key:
+            node.left = self._delete(key, node.left)
+        elif key > node.key:
+            node.right = self._delete(key, node.right)
+        else:
+            if node.left is None:
+                return node.right
+            elif node.right is None:
+                return node.left
+            temp_node = self._find_min(node.right)
+            node.key = temp_node.key
+            node.right = self._delete(temp_node.key, node.right)
+        return node
+
+    def sum_of_heights(self, lst):
+        for key in lst:
+            node = self._search(key, self.root)
+            if node is not None:
+                self.height_sum += node.height()
+        return self.height_sum
+
+    def search(self, key):
+        return self._search(key, self.root)
+
+    def _search(self, key, node):
+        if node is None or node.key == key:
+            return node
+        if key < node.key:
+            return self._search(key, node.left)
+        else:
+            return self._search(key, node.right)
+
+    def display(self):
+        if self.root is not None:
+            self.root.display()
+        else:
+            print("Tree is empty.")
+
+    def _find_min(self, node):
+        while node.left is not None:
+            node = node.left
+        return node
+
+
+class SplayTree:
+    
+    def __init__(self):
+        self.root = None
+        self.height_sum = 0
+        self.rotate_count = 0
+
+    def sum_of_heights(self, lst):
+        for key in lst:
+            node = self._search(key, self.root)
+            if node is not None:
+                self.height_sum += node.height()
+        return self.height_sum
+
+    def insert(self, key):
+        if self.root is None:
+            self.root = Node(key)
+        else:
+            self.root = self._insert(key, self.root)
+
+    def _insert(self, key, node):
+        if key < node.key:
+            if node.left is None:
+                node.left = Node(key)
+            else:
+                node.left = self._insert(key, node.left)
+        elif key > node.key:
+            if node.right is None:
+                node.right = Node(key)
+            else:
+                node.right = self._insert(key, node.right)
+        else:
+            return node
+        return self._splay(key, node)
+
+    def _splay(self, key, node):
+
+        if node is None or node.key == key:
+            return node
+
+        if key < node.key:
+
+            if node.left is None:
+                return node
+            if node.left.key == key:
+                self.rotate_count += 1
+                return self._right_rotate(node)
+
+            node.left = self._splay(key, node.left)
+            if node.left:
+                self.rotate_count += 1
+                self._right_rotate(node)
+            else:
+                return node
+        else:
+            if node.right is None:
+                return node
+            if node.right.key == key:
+                self.rotate_count += 1
+                return self._left_rotate(node)
+
+            node.right = self._splay(key, node.right)
+            if node.right:
+                self.rotate_count += 1
+                return self._left_rotate(node)
+            else:
+                return node
+
+    def _left_rotate(self, node):
+
+        right_child = node.right
+        node.right = right_child.left
+        right_child.left = node
+        return right_child
+
+    def _right_rotate(self, node):
+
+        left_child = node.left
+        node.left = left_child.right
+        left_child.right = node
+        return left_child
+
+    def delete(self, key):
+        self.root = self._delete(key, self.root)
+
+    def _delete(self, key, node):
+        if node is None:
+            return None
+        if key < node.key:
+            node.left = self._delete(key, node.left)
+        elif key > node.key:
+            node.right = self._delete(key, node.right)
+        else:
+            if node.left is None:
+                return node.right
+            elif node.right is None:
+                return node.left
+            else:
+                min_node = self._find_min(node.right)
+                node.key = min_node.key
+                node.right = self._delete(min_node.key, node.right)
+        return node
+
+    def search(self, key):
+        self.root = self._search(key, self.root)
+        return self.root
+
+    def _search(self, key, node):
+        if key < node.key:
+            if node.left is None or node.left.key == key:
+                return self._splay(key, node)
+            else:
+                node.left = self._search(key, node.left)
+        elif key > node.key:
+            if node.right is None or node.right.key == key:
+                return self._splay(key, node)
+            else:
+                node.right = self._search(key, node.right)
+        else:
+            return node
+        return self._splay(key, node)
+
+    def _find_min(self, node):
+        while node.left is not None:
+            node = node.left
+        return node
+
+    def display(self):
+        if self.root is not None:
+            self.root.display()
+        else:
+            print("Tree is empty.")
+
+
+with open("sequence.txt", "r") as file:
+    lines = file.readlines()
+    for line in lines:
+        bst = BST()
+        if line !="\n":
+            line.strip()
+            numbers = line.split()
+            print("\n\nBST:")
+            for num in numbers:
+                if num[-1] == "+":
+                    new_num = num[:-1]
+                    num = int(new_num)
+                    bst.insert(num)
+                elif num[-1] == "-":
+                    new_num = num[:-1]
+                    num = int(new_num)
+                    bst.delete(num)
+            bst.display()
+
+
+with open("sequence.txt", "r") as file:
+    lines = file.readlines()
+    for line in lines:
+        splay_tree = SplayTree()
+        if line !="\n":
+            line.strip()
+            numbers = line.split()
+            print("\n\nSplay_tree:")
+            for num in numbers:
+                if num[-1] == "+":
+                    new_num = num[:-1]
+                    num = int(new_num)
+                    splay_tree.insert(num)
+                elif num[-1] == "-":
+                    new_num = num[:-1]
+                    num = int(new_num)
+                    splay_tree.delete(num)
+            splay_tree.display()
