@@ -1,0 +1,121 @@
+# Simple Tic-Tac-Toe
+import random
+choices = ('player', 'computer')
+start = random.choice(choices)
+
+board = list(range(0, 9))
+winning = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6))
+moves = ((0, 2, 6, 8), (4,), (1, 3, 5, 7))
+
+def print_board():
+    j = 0
+    for i in board:
+        if j % 3 == 2:
+           end = '\n----------\n'
+        elif j % 3 == 0 or 1:
+            end = ' | '
+        j += 1
+        print(f'{i}', end=end)
+
+
+def make_move(board, gamer, move, undo=False):
+    if can_move(board, move):
+        board[move] = gamer
+        win = is_winner(board, gamer)
+        if undo:
+            board[move] = move
+        return True, win
+    return False, False
+
+def can_move(board, move):
+    if move in range(0,9) and isinstance(board[move], int):
+        return True
+    return False
+
+def is_winner(board, gamer):
+    win = True
+    for items in winning:
+        win = True
+        for j in items:
+            if board[j] != gamer:
+                win = False
+                break
+        if win:
+            break
+    return win
+
+
+def empty_space():
+    return (board.count('X') + board.count('O')) < 9
+
+
+def computer_play():
+    move = 10
+    for i in range(0, 9):
+        if make_move(board, comp, i, True)[1]:
+            move = i
+            break
+    if move==10:
+        for j in range(0, 9):
+            if make_move(board, gamer, j, True)[1]:
+                move = j
+                break
+    if move==10:
+        for itemes in moves:
+            for t in itemes:
+                if move==10 and can_move(board, t):
+                    move = t
+                    break
+    return make_move(board, comp, move)
+
+
+def star_gamer():
+    while empty_space():
+        print_board()
+        move = int(input('Choose your move(0-8): '))
+        moved, won = make_move(board, gamer, move)
+        if not moved:
+            print('Unavailable!!! Try again.')
+            continue
+        if won:
+            print('You Won :)))')
+            break
+        elif computer_play()[1]:
+            print('Game Over !')
+            break
+        if not empty_space():
+            print('The game equalised')
+            break
+    print_board()
+
+def start_computer():
+    board[0] = comp
+    while empty_space():
+        print_board()
+        move = int(input('Choose your move(0-8): '))
+        moved, won = make_move(board, gamer, move)
+        if not moved:
+            print('Unavailable!!! Try again.')
+            continue
+        if won:
+            print('You Won :)))')
+            break
+        elif computer_play()[1]:
+            print('Game Over!')
+            break
+        if not empty_space():
+            print('The game equalised')
+            break
+    print_board()
+
+print('Welcome to Tic-Tac-Toe Game.')
+gamer = input('choose X or O for playing: ')
+if gamer == 'X':
+        comp = 'O'
+else:
+    comp = 'X'
+
+if start == 'player':
+    star_gamer()
+elif start == 'computer':
+    start_computer()
