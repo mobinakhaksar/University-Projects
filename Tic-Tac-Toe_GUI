@@ -1,0 +1,126 @@
+# Simple Tic-Tac-Toe with GUI
+
+import tkinter as tk
+import random
+
+
+class Board:
+    turn = random.choice(["X", "O"])
+
+    def __init__(self, root):
+        self.root = root
+        self.root.config(bg="purple")
+        self.root.resizable(0, 0)
+        self.game_board = [" " for i in range(9)]
+        self.root.title("Tic Tac Toe")
+        self.gui()
+        self.winning = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6))
+
+        if self.turn == "O":
+            move = self.AI_move()
+            self.make_move(move, "O")
+
+    def winner(self, gamer):
+        win = True
+        for items in self.winning:
+            win = True
+            for j in items:
+                if self.game_board[j] != gamer:
+                    win = False
+                    break
+            if win:
+                break
+        return win
+
+    def tie(self):
+        if self.game_board.count(" ") > 0:
+            return False
+        else:
+            return True
+
+    def gui(self):
+        self.buttons = self.create_buttons()
+        self.status = tk.Label(self.root, text="The game is running...", font=("MV Boli", 11), bg="purple", fg="white")
+        if self.turn == "X":
+            self.statusturn = tk.Label(self.root, text="The player starts the game!", font=("MV Boli", 11), bg="purple", fg="white")
+        elif self.turn == "O":
+            self.statusturn = tk.Label(self.root, text="The computer starts the game!", font=("MV Boli", 11), bg="purple", fg="white")
+        self.statusturn.grid(row=1, columnspan=3)
+        self.status.grid(row=0, columnspan=3)
+
+    def quiting(self):
+        pass
+
+    def create_buttons(self):
+        buttons = []
+        for i in range(9):
+            buttons.append(
+                tk.Button(self.root, width=10, height=5, text="", bg="white", fg="purple", font=("MV Boli", 10, "bold"), command=lambda i=i: self.pressed(i)))
+            buttons[i].grid(row=i // 3 + 2, column=i % 3)
+        quit_button = tk.Button(self.root, width=10, height=3, text="Quit", bg="white", fg="purple", font=("MV Boli", 10, "bold"), command=self.root.destroy)
+        buttons.append(quit_button)
+        quit_button.grid(row=6, column=1)
+        return buttons
+
+    def pressed(self, pos):
+         if not self.winner("O"):
+            if not self.winner("X"):
+                if self.game_board[pos] == " ":
+                    self.make_move(pos, "X")
+                    move = self.AI_move()
+                    self.make_move(move, "O")
+
+    def AI_move(self):
+        countinues = True
+        winning_pos = [[0, 1, 2], [1, 2, 0], [0, 2, 1], [3, 4, 5], [4, 5, 3], [3, 5, 4],
+                        [6, 7, 8], [7, 8, 6], [6, 8, 7], [0, 3, 6], [0, 6, 3], [3, 6, 0],
+                        [1, 4, 7], [4, 7, 1], [1, 7, 4], [2, 5, 8], [5, 8, 2], [2, 8, 5],
+                        [0, 4, 8], [4, 8, 0], [0, 8, 4], [2, 4, 6], [2, 6, 4], [4, 6, 2]]
+        for a, b, c in winning_pos :
+            if self.game_board[a] == self.game_board[b] == "O":
+                if countinues == True:
+                    if self.game_board[c] == " ":
+                        countinues = False
+                        return c
+
+        if countinues == True :
+            for a, b, c in winning_pos:
+                if self.game_board[a] == self.game_board[b] == "X":
+                    if countinues == True:
+                        if self.game_board[c] == " ":
+                            countinues = False
+                            return c
+
+        for c in [0, 2, 6, 8]:
+            if countinues == True:
+                if self.game_board[c] == " ":
+                    self.game_board[c] = "O"
+                    countinues = False
+                    return c
+
+        if self.game_board[4] == " ":
+            self.game_board[4] = "O"
+            return 4
+
+        for c in [1, 3, 5, 7]:
+            if countinues == True:
+                if self.game_board[c] == " ":
+                    self.game_board[c] = "O"
+                    countinues = False
+                    return c
+
+    def make_move(self, pos, gamer):
+        self.game_board[pos] = gamer
+        self.buttons[pos].config(text=gamer)
+        if self.winner("X"):
+            self.status.config(text="YOU WON :)))", font=("MV Boli", 11))
+        elif self.winner("O"):
+            self.status.config(text="YOU LOSE!", font=("MV Boli", 11))
+        elif self.tie():
+            self.status.config(text="It's a tie!", font=("MV Boli", 11))
+        else:
+            self.status.config(text="The game is running...", font=("MV Boli", 11))
+
+root = tk.Tk()
+game_board = Board(root)
+root.mainloop()
