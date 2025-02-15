@@ -1,4 +1,5 @@
 # Simple Tic-Tac-Toe
+
 import random
 choices = ('player', 'computer')
 start = random.choice(choices)
