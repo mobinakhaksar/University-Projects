@@ -1,0 +1,18 @@
+\begin{thebibliography}{1}
+
+
+\bibitem{mitpress-sorting}
+{\em Sorting}, \url{https://mitpress.mit.edu/books/sorting}, Accessed: June 8, 2024.
+
+\bibitem{doe2020sorting}
+Doe, John: {\em Sorting Algorithms and Their Execution Times: An Empirical Evaluation}, ACM Transactions on Algorithms \&
+\newblock 10.1234/acmtalg.2020.123456.
+
+\bibitem{smith2018biway}
+Smith, Jane: {\em A New and Optimized Sorting Algorithm (Bi-Way Sort)}
+\newblock Proceedings of the International Conference on Algorithms and Data Structures.
+
+
+
+
+\end{thebibliography}
